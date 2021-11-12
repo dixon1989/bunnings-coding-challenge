@@ -1,4 +1,5 @@
 import Papa from "papaparse";
+import { Barcode, Catalog, Supplier, ProductList, OutputList } from "../types";
 
 const barcodesA = `./input/barcodesA.csv`;
 const catalogA = `./input/catalogA.csv`;
@@ -19,17 +20,25 @@ export const getData = async (data: any) => {
 };
 
 export const fetchData = async (value: string) => {
-  const barcode = await getData(value === "A" ? barcodesA : barcodesB);
-  const catalog = await getData(value === "A" ? catalogA : catalogB);
-  const supplier = await getData(value === "A" ? supplierA : supplierB);
-  let filterOverallArray: any = [];
-  catalog.forEach((catalog: any) => {
-    let result = barcode.filter((item: any) => {
+  const barcode = (await getData(
+    value === "A" ? barcodesA : barcodesB
+  )) as Barcode[];
+  const catalog = (await getData(
+    value === "A" ? catalogA : catalogB
+  )) as Catalog[];
+  const supplier = (await getData(
+    value === "A" ? supplierA : supplierB
+  )) as Supplier[];
+  let filterOverallArray: ProductList[] = [];
+  catalog.forEach((catalog: Catalog) => {
+    let result = barcode.filter((item: Barcode) => {
       return item.SKU === catalog.SKU;
     });
-    result.forEach((barcode: any) => {
+    result.forEach((barcode: Barcode) => {
       const filterSKUIndex: number = filterOverallArray.length
-        ? filterOverallArray.findIndex((item: any) => item.SKU === catalog.SKU)
+        ? filterOverallArray.findIndex(
+            (item: ProductList) => item.SKU === catalog.SKU
+          )
         : -1;
       if (filterSKUIndex > -1) {
         filterOverallArray[filterSKUIndex].Barcode.push(barcode.Barcode);
@@ -45,8 +54,8 @@ export const fetchData = async (value: string) => {
     });
   });
 
-  filterOverallArray.forEach((item: any) => {
-    let result: any = supplier.filter((supplier: any) => {
+  filterOverallArray.forEach((item: ProductList) => {
+    let result: any = supplier.filter((supplier: Supplier) => {
       return supplier.ID === item.SupplierID;
     });
     item.SupplierName = result[0] !== undefined ? result[0].Name : null;
@@ -59,14 +68,14 @@ export const mergeData = async () => {
   const companyAData = await fetchData("A");
   const companyBData = await fetchData("B");
 
-  let filterFinalArray: any = [];
+  let filterFinalArray: OutputList[] = [];
 
-  companyAData.forEach((itemA: any) => {
-    let result: any = companyBData.filter((itemB: any) => {
+  companyAData.forEach((itemA: ProductList) => {
+    let result: any = companyBData.filter((itemB: ProductList) => {
       return itemB.Description.includes(itemA.Description);
     });
     let existBarCode = result[0].Barcode.some(
-      (element: any) => itemA.Barcode.indexOf(element) > -1
+      (element: string) => itemA.Barcode.indexOf(element) > -1
     );
     existBarCode
       ? filterFinalArray.push({
@@ -87,6 +96,6 @@ export const mergeData = async () => {
           }
         );
   });
-  console.log("ssssssssssss", filterFinalArray);
+
   return filterFinalArray;
 };
