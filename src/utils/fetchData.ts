@@ -11,24 +11,29 @@ const supplierB = `./input/suppliersB.csv`;
 export const getData = async (data: any) => {
   const response = (await fetch(data)) as any;
   const reader = response.body.getReader();
-  const result = await reader.read(); // raw array
+  const result = await reader.read();
   const decoder = new TextDecoder("utf-8");
-  const csv = decoder.decode(result.value); // the csv text
-  const results = Papa.parse(csv, { header: true }); // object with { data, errors, meta }
-  const rows = results.data; // array of objects
+  const csv = decoder.decode(result.value);
+  const results = Papa.parse(csv, { header: true });
+  const rows = results.data;
   return rows;
 };
 
-export const fetchData = async (value: string) => {
-  const barcode = (await getData(
-    value === "A" ? barcodesA : barcodesB
-  )) as Barcode[];
-  const catalog = (await getData(
-    value === "A" ? catalogA : catalogB
-  )) as Catalog[];
-  const supplier = (await getData(
-    value === "A" ? supplierA : supplierB
-  )) as Supplier[];
+export const fetchData = async (
+  value?: string,
+  barcodeData?: Barcode[],
+  catalogData?: Catalog[],
+  supplierData?: Supplier[]
+) => {
+  const barcode = !barcodeData
+    ? ((await getData(value === "A" ? barcodesA : barcodesB)) as Barcode[])
+    : barcodeData;
+  const catalog = !catalogData
+    ? ((await getData(value === "A" ? catalogA : catalogB)) as Catalog[])
+    : catalogData;
+  const supplier = !supplierData
+    ? ((await getData(value === "A" ? supplierA : supplierB)) as Supplier[])
+    : supplierData;
   let filterOverallArray: ProductList[] = [];
   catalog.forEach((catalog: Catalog) => {
     let result = barcode.filter((item: Barcode) => {
@@ -60,13 +65,15 @@ export const fetchData = async (value: string) => {
     });
     item.SupplierName = result[0] !== undefined ? result[0].Name : null;
   });
-
   return filterOverallArray;
 };
 
-export const mergeData = async () => {
-  const companyAData = await fetchData("A");
-  const companyBData = await fetchData("B");
+export const mergeData = async (
+  dataA?: ProductList[],
+  dataB?: ProductList[]
+) => {
+  const companyAData = !dataA ? await fetchData("A") : dataA;
+  const companyBData = !dataB ? await fetchData("B") : dataB;
 
   let filterFinalArray: OutputList[] = [];
 

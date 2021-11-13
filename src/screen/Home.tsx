@@ -3,6 +3,7 @@ import { mergeData } from "../utils";
 import { OutputList } from "../types";
 import Result from "../components/Result";
 
+
 const Home: React.FC = () => {
   const [outputData, setOutputData] = React.useState<
     OutputList[] | undefined
@@ -18,7 +19,8 @@ const Home: React.FC = () => {
   let output = outputData ? outputData : undefined;
 
   return (
-    <>{outputData ? <Result results={output} /> : <p>No Results Found</p>}</>
+    <>{outputData ? <Result results={output} /> : <p>No Results Found</p>}
+    </>
   );
 };
 
